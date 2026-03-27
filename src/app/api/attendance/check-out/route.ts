@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getNepalNowParts } from "@/lib/utils/timezone";
 
 export async function POST(req: Request) {
   try {
@@ -23,17 +24,15 @@ export async function POST(req: Request) {
     }
 
     const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-
-    const startOfDay = new Date(`${today}T00:00:00`);
-    const endOfDay = new Date(`${today}T23:59:59`);
+    const nepal = getNepalNowParts();
+    const today = nepal.date;
 
     const { data: attendance, error: fetchError } = await supabase
       .from("attendance")
       .select("id, check_out")
       .eq("user_id", user.id)
-      .gte("check_in", startOfDay.toISOString())
-      .lte("check_in", endOfDay.toISOString())
+      .gte("check_in", `${today}T00:00:00+05:45`)
+      .lte("check_in", `${today}T23:59:59+05:45`)
       .maybeSingle();
 
     if (fetchError) {
