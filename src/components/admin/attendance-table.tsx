@@ -327,14 +327,14 @@ const goPrev = () => {
           <div className="p-4 border rounded-xl">
             <p className="text-sm font-semibold">Late Status</p>
             <div className="mt-2">
-              {selectedRow.is_late ? "⚠️ Late" : "✅ On Time"}
+              {selectedRow.is_late ? "Late" : "On Time"}
             </div>
           </div>
 
           <div className="p-4 border rounded-xl">
             <p className="text-sm font-semibold">Overtime</p>
             <div className="mt-2">
-              {selectedRow.is_overtime ? "⏱️ Yes" : "No"}
+              {selectedRow.is_overtime ? "Yes" : "No"}
             </div>
           </div>
         </div>
