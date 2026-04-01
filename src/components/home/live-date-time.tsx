@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 
 export default function LiveDateTime() {
-  const [now, setNow] = useState<Date | null>(null);
+  const [now, setNow] = useState<Date>(() => new Date());
 
   useEffect(() => {
-    setNow(new Date());
-
     const interval = setInterval(() => {
       setNow(new Date());
     }, 1000);

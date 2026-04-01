@@ -5,6 +5,8 @@ type AttendanceRow = {
   email: string;
   check_in: string | null;
   check_out: string | null;
+  late_reason?: string;
+  checkout_report?: string;
   is_late: boolean;
   is_overtime: boolean;
 };
@@ -26,7 +28,9 @@ export default function ExportAttendanceButton({ rows }: Props) {
       "Check In",
       "Check Out",
       "Late",
+      "Late Reason",
       "Overtime",
+      "Work Report",
     ];
 
     const csvRows = rows.map((row) => [
@@ -35,7 +39,9 @@ export default function ExportAttendanceButton({ rows }: Props) {
       row.check_in ?? "",
       row.check_out ?? "",
       row.is_late ? "Yes" : "No",
+      row.late_reason ?? "",
       row.is_overtime ? "Yes" : "No",
+      row.checkout_report ?? "",
     ]);
 
     const csvContent = [headers, ...csvRows]
@@ -53,6 +59,7 @@ export default function ExportAttendanceButton({ rows }: Props) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (

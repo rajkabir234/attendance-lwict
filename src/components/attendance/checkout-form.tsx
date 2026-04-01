@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutForm() {
+  const router = useRouter();
+
   const [checkoutReport, setCheckoutReport] = useState("");
   const [isOvertime, setIsOvertime] = useState(false);
   const [message, setMessage] = useState("");
@@ -40,10 +43,11 @@ export default function CheckoutForm() {
     setMessage("Check-out successful");
     setCheckoutReport("");
     setIsOvertime(false);
+    router.refresh();
   };
 
   return (
-    <div className="border rounded-xl p-5 space-y-4">
+    <div className="space-y-4">
       <h2 className="text-xl font-semibold">Check Out</h2>
 
       <textarea

@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/utils/auth";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import CreateStaffForm from "@/components/admin/create-staff-form";
 import ExportAttendanceButton from "@/components/admin/export-attendance-button";
+import AttendanceTable from "@/components/admin/attendance-table";
 import SignOutButton from "@/components/auth/sign-out-button";
 import LeaveActionButtons from "@/components/leaves/leave-action-buttons";
 import SummaryCard from "@/components/ui/summary-card";
@@ -12,6 +13,62 @@ type AdminPageProps = {
     from?: string;
     to?: string;
   }>;
+};
+
+type SupabaseAttendanceRow = {
+  id: string;
+  user_id: string;
+  check_in: string | null;
+  check_out: string | null;
+  checkout_report?: string | null;
+  is_late: boolean;
+  late_justification?: string | null;
+  is_overtime: boolean;
+  profiles?: {
+    full_name?: string | null;
+    email?: string | null;
+  }[] | null;
+};
+
+type AttendanceRow = {
+  id: string;
+  user_id: string;
+  check_in: string | null;
+  check_out: string | null;
+  checkout_report?: string | null;
+  is_late: boolean;
+  late_justification?: string | null;
+  is_overtime: boolean;
+  profiles?: {
+    full_name?: string | null;
+    email?: string | null;
+  } | null;
+};
+
+type SupabaseLeaveRow = {
+  id: string;
+  user_id: string;
+  start_date: string;
+  end_date: string;
+  reason: string;
+  status: string;
+  created_at: string;
+  profiles?: {
+    full_name?: string | null;
+    email?: string | null;
+  }[] | null;
+};
+
+type LeaveRow = {
+  id: string;
+  profiles?: {
+    full_name?: string | null;
+    email?: string | null;
+  } | null;
+  start_date: string;
+  end_date: string;
+  reason: string;
+  created_at: string;
 };
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -38,7 +95,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       user_id,
       check_in,
       check_out,
+      checkout_report,
       is_late,
+      late_justification,
       is_overtime,
       profiles!attendance_user_id_fkey(full_name, email)
     `)
@@ -61,18 +120,38 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
+  const pendingLeaveRows: LeaveRow[] =
+    pendingLeaves?.map((item: SupabaseLeaveRow) => ({
+      ...item,
+      profiles:
+        Array.isArray(item.profiles)
+          ? item.profiles[0] || null
+          : item.profiles || null,
+    })) || [];
+
   const presentCount = attendanceRows?.length || 0;
   const checkedOutCount =
     attendanceRows?.filter((item) => item.check_out).length || 0;
   const lateCount =
     attendanceRows?.filter((item) => item.is_late).length || 0;
 
+  const tableRows: AttendanceRow[] =
+    attendanceRows?.map((item: SupabaseAttendanceRow) => ({
+      ...item,
+      profiles:
+        Array.isArray(item.profiles)
+          ? item.profiles[0] || null
+          : item.profiles || null,
+    })) || [];
+
   const exportRows =
-    attendanceRows?.map((item: any) => ({
+    tableRows.map((item: AttendanceRow) => ({
       name: item.profiles?.full_name || "Unknown",
       email: item.profiles?.email || "-",
       check_in: item.check_in,
       check_out: item.check_out,
+      late_reason: item.late_justification || "",
+      checkout_report: item.checkout_report || "",
       is_late: item.is_late,
       is_overtime: item.is_overtime,
     })) || [];
@@ -82,7 +161,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       <div className="flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <p className="text-slate-600">Manage staff, attendance, and leave requests.</p>
+          <p className="text-slate-600">
+            Manage staff, attendance, and leave requests.
+          </p>
         </div>
 
         <SignOutButton />
@@ -147,66 +228,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </form>
       </div>
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Attendance Table</h2>
-          <StatusBadge
-            label={`${presentCount} Records`}
-            variant="default"
-          />
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b bg-slate-50 text-left">
-                <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Email</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Check In</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Check Out</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Late</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Overtime</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendanceRows?.length ? (
-                attendanceRows.map((item: any) => (
-                  <tr key={item.id} className="border-b last:border-b-0">
-                    <td className="px-4 py-3 font-medium text-slate-900">
-                      {item.profiles?.full_name || "Unknown"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {item.profiles?.email || "-"}
-                    </td>
-                    <td className="px-4 py-3">{formatDateTime(item.check_in)}</td>
-                    <td className="px-4 py-3">{formatDateTime(item.check_out)}</td>
-                    <td className="px-4 py-3">
-                      {item.is_late ? (
-                        <StatusBadge label="Late" variant="warning" />
-                      ) : (
-                        <StatusBadge label="On Time" variant="success" />
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.is_overtime ? (
-                        <StatusBadge label="Overtime" variant="default" />
-                      ) : (
-                        <span className="text-slate-500">No</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
-                    No attendance records found for this date range.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AttendanceTable rows={tableRows} />
 
       <div className="rounded-2xl border bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
@@ -231,8 +253,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </tr>
             </thead>
             <tbody>
-              {pendingLeaves?.length ? (
-                pendingLeaves.map((leave: any) => (
+              {pendingLeaveRows.length ? (
+                pendingLeaveRows.map((leave: LeaveRow) => (
                   <tr key={leave.id} className="border-b last:border-b-0">
                     <td className="px-4 py-3 font-medium text-slate-900">
                       {leave.profiles?.full_name || "Unknown"}
@@ -242,7 +264,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     </td>
                     <td className="px-4 py-3">{formatDate(leave.start_date)}</td>
                     <td className="px-4 py-3">{formatDate(leave.end_date)}</td>
-                    <td className="px-4 py-3 text-slate-600">{leave.reason}</td>
+                    <td className="px-4 py-3 text-slate-700">{leave.reason}</td>
                     <td className="px-4 py-3">{formatDateTime(leave.created_at)}</td>
                     <td className="px-4 py-3">
                       <LeaveActionButtons leaveId={leave.id} />

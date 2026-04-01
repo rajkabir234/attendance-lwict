@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { haversineDistanceMeters } from "@/lib/utils/geo";
 
 type Props = {
@@ -16,6 +17,8 @@ export default function GeofencedCheckInButton({
   radiusMeters,
   shiftStart,
 }: Props) {
+  const router = useRouter();
+
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [lateJustification, setLateJustification] = useState("");
   const [message, setMessage] = useState("");
@@ -23,12 +26,6 @@ export default function GeofencedCheckInButton({
   const [submitting, setSubmitting] = useState(false);
 
   const now = useMemo(() => new Date(), []);
-
-  const isLate = useMemo(() => {
-    const today = now.toISOString().slice(0, 10);
-    const shiftDate = new Date(`${today}T${shiftStart}`);
-    return now > shiftDate;
-  }, [now, shiftStart]);
 
   const distance = useMemo(() => {
     if (!coords) return null;
@@ -40,6 +37,12 @@ export default function GeofencedCheckInButton({
       officeLng
     );
   }, [coords, officeLat, officeLng]);
+
+  const isLate = useMemo(() => {
+    const today = now.toISOString().slice(0, 10);
+    const shiftDate = new Date(`${today}T${shiftStart}`);
+    return now > shiftDate;
+  }, [now, shiftStart]);
 
   const withinFence = distance !== null && distance <= radiusMeters;
 
@@ -105,7 +108,6 @@ export default function GeofencedCheckInButton({
     });
 
     const data = await res.json();
-
     setSubmitting(false);
 
     if (!res.ok) {
@@ -114,10 +116,11 @@ export default function GeofencedCheckInButton({
     }
 
     setMessage("Check-in successful");
+    router.refresh();
   };
 
   return (
-    <div className="border rounded-xl p-5 space-y-4">
+    <div className="space-y-4">
       <h2 className="text-xl font-semibold">Check In</h2>
 
       <button
