@@ -36,8 +36,8 @@ export default function LiveDateTime() {
 
   return (
     <div className="space-y-2">
-      <p className="text-base text-slate-600">{formattedDate}</p>
-      <p className="text-3xl font-bold text-slate-900">{formattedTime}</p>
+      <p className="text-base text-white-100">{formattedDate}</p>
+      <p className="text-3xl font-bold text-white-900">{formattedTime}</p>
     </div>
   );
 }
