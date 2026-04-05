@@ -6,6 +6,28 @@ import SignOutButton from "@/components/auth/sign-out-button";
 import LeaveApplicationForm from "@/components/leaves/leave-application-form";
 import SummaryCard from "@/components/ui/summary-card";
 import StatusBadge from "@/components/ui/status-badge";
+import CollapsibleCard from "@/components/ui/collapsible-card";
+
+function formatDurationFromDates(
+  checkInValue: string | null,
+  checkOutValue?: string | null
+) {
+  if (!checkInValue) return "-";
+
+  const start = new Date(checkInValue).getTime();
+  const end = checkOutValue ? new Date(checkOutValue).getTime() : Date.now();
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    return "-";
+  }
+
+  const diffMs = end - start;
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours}h ${minutes}m`;
+}
 
 export default async function DashboardPage() {
   const { supabase, user } = await requireUser();
@@ -55,20 +77,28 @@ export default async function DashboardPage() {
       ? "Completed"
       : "Checked In";
 
-  return (
-    <main className="mx-auto max-w-7xl px-4 py-8 space-y-6">
-      <div className="flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Staff Dashboard</h1>
-          <p className="text-slate-600">
-            Welcome {profile?.full_name || user.email}
-          </p>
-        </div>
+  const todayDuration = todayAttendance?.check_in
+    ? formatDurationFromDates(todayAttendance.check_in, todayAttendance.check_out)
+    : "-";
 
-        <SignOutButton />
+  return (
+    <main className="mx-auto max-w-7xl space-y-6 px-4 py-8">
+      <div className="app-card p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              Staff Dashboard
+            </h1>
+            <p className="mt-1 text-muted">
+              Welcome {profile?.full_name || user.email}
+            </p>
+          </div>
+
+          <SignOutButton />
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <SummaryCard title="Today Status" value={todayStatus} />
         <SummaryCard
           title="Check In"
@@ -78,6 +108,7 @@ export default async function DashboardPage() {
           title="Check Out"
           value={todayAttendance?.check_out ? formatDateTime(todayAttendance.check_out) : "-"}
         />
+        <SummaryCard title="Hours Stayed" value={todayDuration} />
         <SummaryCard
           title="Overtime"
           value={todayAttendance?.is_overtime ? "Yes" : "No"}
@@ -85,30 +116,44 @@ export default async function DashboardPage() {
       </div>
 
       {!hasCheckedIn && profile && settings && (
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+        <CollapsibleCard
+          title="Check In"
+          subtitle="Fetch your location and mark attendance inside office range."
+          defaultOpen={true}
+        >
           <GeofencedCheckInButton
             officeLat={settings.office_latitude}
             officeLng={settings.office_longitude}
             radiusMeters={settings.geofence_radius_m}
             shiftStart={profile.shift_start}
           />
-        </div>
+        </CollapsibleCard>
       )}
 
       {hasCheckedIn && !hasCheckedOut && (
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+        <CollapsibleCard
+          title="Check Out"
+          subtitle="Submit your work summary before completing today's attendance."
+          defaultOpen={true}
+        >
           <CheckoutForm />
-        </div>
+        </CollapsibleCard>
       )}
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
+      <CollapsibleCard
+        title="Leave Application"
+        subtitle="Apply for leave and send your request for admin approval."
+        defaultOpen={false}
+      >
         <LeaveApplicationForm />
-      </div>
+      </CollapsibleCard>
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Recent Attendance</h2>
-          {todayAttendance ? (
+      <CollapsibleCard
+        title="Recent Attendance"
+        subtitle="Your latest check-in and check-out records."
+        defaultOpen={true}
+        rightSlot={
+          todayAttendance ? (
             todayAttendance.check_out ? (
               <StatusBadge label="Completed" variant="success" />
             ) : (
@@ -116,26 +161,30 @@ export default async function DashboardPage() {
             )
           ) : (
             <StatusBadge label="Not Checked In" variant="danger" />
-          )}
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-sm">
+          )
+        }
+      >
+        <div className="overflow-x-auto rounded-2xl border border-subtle">
+          <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b bg-slate-50 text-left">
-                <th className="px-4 py-3 font-semibold text-slate-700">Check In</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Check Out</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Late</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Overtime</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Report</th>
+              <tr className="text-left">
+                <th className="px-4 py-3">Check In</th>
+                <th className="px-4 py-3">Check Out</th>
+                <th className="px-4 py-3">Stayed</th>
+                <th className="px-4 py-3">Late</th>
+                <th className="px-4 py-3">Overtime</th>
+                <th className="px-4 py-3">Report</th>
               </tr>
             </thead>
             <tbody>
               {history?.length ? (
                 history.map((item) => (
-                  <tr key={item.id} className="border-b last:border-b-0">
+                  <tr key={item.id} className="border-b border-subtle last:border-b-0">
                     <td className="px-4 py-3">{formatDateTime(item.check_in)}</td>
                     <td className="px-4 py-3">{formatDateTime(item.check_out)}</td>
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
+                      {formatDurationFromDates(item.check_in, item.check_out)}
+                    </td>
                     <td className="px-4 py-3">
                       {item.is_late ? (
                         <StatusBadge label="Late" variant="warning" />
@@ -147,17 +196,17 @@ export default async function DashboardPage() {
                       {item.is_overtime ? (
                         <StatusBadge label="Overtime" variant="default" />
                       ) : (
-                        <span className="text-slate-500">No</span>
+                        <span className="text-muted">No</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {item.checkout_report || "-"}
+                    <td className="max-w-sm px-4 py-3 text-muted">
+                      <div className="line-clamp-2">{item.checkout_report || "-"}</div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-6 text-center text-muted">
                     No attendance records yet.
                   </td>
                 </tr>
@@ -165,32 +214,34 @@ export default async function DashboardPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </CollapsibleCard>
 
-      <div className="rounded-2xl border bg-white p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">My Leave Requests</h2>
+      <CollapsibleCard
+        title="My Leave Requests"
+        subtitle="See your leave application history and current status."
+        defaultOpen={false}
+        rightSlot={
           <StatusBadge label={`${leaveHistory?.length || 0} Requests`} variant="default" />
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse text-sm">
+        }
+      >
+        <div className="overflow-x-auto rounded-2xl border border-subtle">
+          <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b bg-slate-50 text-left">
-                <th className="px-4 py-3 font-semibold text-slate-700">Start Date</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">End Date</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Reason</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Applied On</th>
+              <tr className="text-left">
+                <th className="px-4 py-3">Start Date</th>
+                <th className="px-4 py-3">End Date</th>
+                <th className="px-4 py-3">Reason</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Applied On</th>
               </tr>
             </thead>
             <tbody>
               {leaveHistory?.length ? (
                 leaveHistory.map((item) => (
-                  <tr key={item.id} className="border-b last:border-b-0">
+                  <tr key={item.id} className="border-b border-subtle last:border-b-0">
                     <td className="px-4 py-3">{formatDate(item.start_date)}</td>
                     <td className="px-4 py-3">{formatDate(item.end_date)}</td>
-                    <td className="px-4 py-3 text-slate-600">{item.reason}</td>
+                    <td className="px-4 py-3 text-muted">{item.reason}</td>
                     <td className="px-4 py-3">
                       {item.status === "approved" ? (
                         <StatusBadge label="Approved" variant="success" />
@@ -205,7 +256,7 @@ export default async function DashboardPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-6 text-center text-muted">
                     No leave requests yet.
                   </td>
                 </tr>
@@ -213,7 +264,7 @@ export default async function DashboardPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </CollapsibleCard>
     </main>
   );
 }

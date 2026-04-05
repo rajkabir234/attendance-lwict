@@ -20,12 +20,14 @@ export default function CollapsibleCard({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <section className="app-section overflow-hidden fade-in">
       <div className="flex items-center justify-between gap-4 px-6 py-5">
         <div className="min-w-0">
-          <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            {title}
+          </h2>
           {subtitle ? (
-            <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
+            <p className="mt-1 text-sm text-muted">{subtitle}</p>
           ) : null}
         </div>
 
@@ -35,7 +37,7 @@ export default function CollapsibleCard({
           <button
             type="button"
             onClick={() => setIsOpen((prev) => !prev)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-lg text-slate-700 transition hover:bg-slate-100"
+            className="btn-base btn-outline h-10 w-10 rounded-full p-0"
             aria-label={isOpen ? "Collapse section" : "Expand section"}
             aria-expanded={isOpen}
           >
@@ -46,7 +48,9 @@ export default function CollapsibleCard({
         </div>
       </div>
 
-      {isOpen ? <div className="border-t border-slate-200 px-6 py-6">{children}</div> : null}
+      {isOpen ? (
+        <div className="border-t border-subtle px-6 py-6 slide-up">{children}</div>
+      ) : null}
     </section>
   );
 }

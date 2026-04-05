@@ -9,72 +9,109 @@ export default function CheckoutForm() {
   const [checkoutReport, setCheckoutReport] = useState("");
   const [isOvertime, setIsOvertime] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleCheckout = async () => {
     if (!checkoutReport.trim()) {
       setMessage("Brief report is required.");
+      setMessageType("error");
       return;
     }
 
     setSubmitting(true);
     setMessage("");
+    setMessageType("");
 
-    const res = await fetch("/api/attendance/check-out", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        checkoutReport,
-        isOvertime,
-      }),
-    });
+    try {
+      const res = await fetch("/api/attendance/check-out", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          checkoutReport,
+          isOvertime,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setSubmitting(false);
+      if (!res.ok) {
+        setMessage(data.error || "Check-out failed");
+        setMessageType("error");
+        return;
+      }
 
-    if (!res.ok) {
-      setMessage(data.error || "Check-out failed");
-      return;
+      setMessage("Check-out successful");
+      setMessageType("success");
+      setCheckoutReport("");
+      setIsOvertime(false);
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unexpected error");
+      setMessageType("error");
+    } finally {
+      setSubmitting(false);
     }
-
-    setMessage("Check-out successful");
-    setCheckoutReport("");
-    setIsOvertime(false);
-    router.refresh();
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Check Out</h2>
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          Check Out
+        </h2>
+        <p className="mt-1 text-sm text-muted">
+          Submit a brief work summary before finishing today’s attendance.
+        </p>
+      </div>
 
-      <textarea
-        className="w-full border rounded-md p-3"
-        placeholder="Write a brief report of today's work"
-        value={checkoutReport}
-        onChange={(e) => setCheckoutReport(e.target.value)}
-      />
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+          Work Report
+        </label>
+        <textarea
+          className="w-full rounded-xl px-4 py-3"
+          rows={5}
+          placeholder="Write a brief report of today's work"
+          value={checkoutReport}
+          onChange={(e) => setCheckoutReport(e.target.value)}
+        />
+      </div>
 
-      <label className="flex items-center gap-2">
+      <label className="flex items-center gap-3 rounded-xl border border-subtle bg-muted px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200">
         <input
           type="checkbox"
           checked={isOvertime}
           onChange={(e) => setIsOvertime(e.target.checked)}
+          className="h-4 w-4"
         />
-        Mark as Overtime
+        <span>Mark this checkout as overtime</span>
       </label>
 
-      <button
-        onClick={handleCheckout}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md"
-        disabled={submitting}
-      >
-        {submitting ? "Submitting..." : "Check Out"}
-      </button>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={handleCheckout}
+          className="btn-base btn-primary"
+          disabled={submitting}
+        >
+          {submitting ? "Submitting..." : "Check Out"}
+        </button>
+      </div>
 
-      {message && <p className="text-sm">{message}</p>}
+      {message ? (
+        <div
+          className={`rounded-xl px-4 py-3 text-sm ${
+            messageType === "success"
+              ? "status-success"
+              : "status-danger"
+          }`}
+        >
+          {message}
+        </div>
+      ) : null}
     </div>
   );
 }

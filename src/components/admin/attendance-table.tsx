@@ -196,22 +196,26 @@ export default function AttendanceTable({ rows }: Props) {
     <>
       <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2 xl:col-span-2">
-          <label className="text-sm font-medium text-slate-700">Search</label>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Search
+          </label>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email, late reason, or work report"
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
+            className="w-full rounded-xl px-4 py-3"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700">Staff</label>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Staff
+          </label>
           <select
             value={staffFilter}
             onChange={(e) => setStaffFilter(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
+            className="w-full rounded-xl px-4 py-3"
           >
             <option value="all">All Staff</option>
             {staffOptions.map((staff) => (
@@ -223,7 +227,7 @@ export default function AttendanceTable({ rows }: Props) {
         </div>
 
         <div className="flex items-end">
-          <label className="flex w-full items-center justify-between rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700">
+          <label className="flex w-full items-center justify-between rounded-xl border border-subtle px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200">
             <span>Only Late</span>
             <input
               type="checkbox"
@@ -236,50 +240,42 @@ export default function AttendanceTable({ rows }: Props) {
       </div>
 
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted">
           Search records, filter by staff, and inspect complete details.
         </p>
         <StatusBadge label={`${filteredRows.length} Showing`} variant="default" />
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-2xl border border-subtle">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-left">
-              <th className="px-4 py-3 font-semibold text-slate-700">Staff</th>
-              <th className="px-4 py-3 font-semibold text-slate-700">Date</th>
-              <th className="px-4 py-3 font-semibold text-slate-700">Check In</th>
-              <th className="px-4 py-3 font-semibold text-slate-700">Check Out</th>
-              <th className="px-4 py-3 font-semibold text-slate-700">Late</th>
-              <th className="px-4 py-3 font-semibold text-slate-700">Overtime</th>
-              <th className="px-4 py-3 font-semibold text-slate-700">Details</th>
+            <tr className="text-left">
+              <th className="px-4 py-3">Staff</th>
+              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Check In</th>
+              <th className="px-4 py-3">Check Out</th>
+              <th className="px-4 py-3">Late</th>
+              <th className="px-4 py-3">Overtime</th>
+              <th className="px-4 py-3">Details</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredRows.length ? (
               filteredRows.map((item) => (
-                <tr key={item.id} className="border-b border-slate-100 last:border-b-0">
+                <tr key={item.id} className="border-b border-subtle last:border-b-0">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
                       {item.profiles?.full_name || "Unknown"}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted">
                       {item.profiles?.email || "-"}
                     </div>
                   </td>
 
-                  <td className="px-4 py-3 text-slate-700">
-                    {formatShortDate(item.check_in)}
-                  </td>
-
-                  <td className="px-4 py-3 text-slate-700">
-                    {formatDateTime(item.check_in)}
-                  </td>
-
-                  <td className="px-4 py-3 text-slate-700">
-                    {formatDateTime(item.check_out)}
-                  </td>
+                  <td className="px-4 py-3">{formatShortDate(item.check_in)}</td>
+                  <td className="px-4 py-3">{formatDateTime(item.check_in)}</td>
+                  <td className="px-4 py-3">{formatDateTime(item.check_out)}</td>
 
                   <td className="px-4 py-3">
                     {item.is_late ? (
@@ -293,7 +289,7 @@ export default function AttendanceTable({ rows }: Props) {
                     {item.is_overtime ? (
                       <StatusBadge label="Overtime" variant="default" />
                     ) : (
-                      <span className="text-slate-500">No</span>
+                      <span className="text-muted">No</span>
                     )}
                   </td>
 
@@ -301,7 +297,7 @@ export default function AttendanceTable({ rows }: Props) {
                     <button
                       type="button"
                       onClick={() => setSelectedRow(item)}
-                      className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                      className="btn-base btn-outline"
                     >
                       View
                     </button>
@@ -310,7 +306,7 @@ export default function AttendanceTable({ rows }: Props) {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-muted">
                   No attendance records match the current filters.
                 </td>
               </tr>
@@ -321,17 +317,19 @@ export default function AttendanceTable({ rows }: Props) {
 
       {selectedRow ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6 fade-in"
           onClick={() => setSelectedRow(null)}
         >
           <div
-            className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl"
+            className="app-card relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl scale-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+            <div className="flex items-start justify-between border-b border-subtle px-6 py-5">
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">Attendance Details</h3>
-                <p className="mt-1 text-sm text-slate-600">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  Attendance Details
+                </h3>
+                <p className="mt-1 text-sm text-muted">
                   {selectedRow.profiles?.full_name || "Unknown"} •{" "}
                   {selectedRow.profiles?.email || "-"}
                 </p>
@@ -340,7 +338,7 @@ export default function AttendanceTable({ rows }: Props) {
               <button
                 type="button"
                 onClick={() => setSelectedRow(null)}
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="btn-base btn-outline"
               >
                 Close
               </button>
@@ -351,7 +349,7 @@ export default function AttendanceTable({ rows }: Props) {
                 <button
                   onClick={goPrev}
                   disabled={currentIndex <= 0}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="btn-base btn-outline"
                 >
                   ← Previous
                 </button>
@@ -359,35 +357,31 @@ export default function AttendanceTable({ rows }: Props) {
                 <button
                   onClick={goNext}
                   disabled={currentIndex === -1 || currentIndex >= filteredRows.length - 1}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="btn-base btn-outline"
                 >
                   Next →
                 </button>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <div className="rounded-2xl border border-subtle bg-muted p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted">
                     Check In
                   </p>
-                  <p className="mt-2 text-sm text-slate-800">
-                    {formatDateTime(selectedRow.check_in)}
-                  </p>
+                  <p className="mt-2 text-sm">{formatDateTime(selectedRow.check_in)}</p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <div className="rounded-2xl border border-subtle bg-muted p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted">
                     Check Out
                   </p>
-                  <p className="mt-2 text-sm text-slate-800">
-                    {formatDateTime(selectedRow.check_out)}
-                  </p>
+                  <p className="mt-2 text-sm">{formatDateTime(selectedRow.check_out)}</p>
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-semibold text-slate-900">Late Status</p>
+                <div className="rounded-2xl border border-subtle p-4">
+                  <p className="text-sm font-semibold">Late Status</p>
                   <div className="mt-3">
                     {selectedRow.is_late ? (
                       <StatusBadge label="Late" variant="warning" />
@@ -397,41 +391,37 @@ export default function AttendanceTable({ rows }: Props) {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-sm font-semibold text-slate-900">Overtime</p>
+                <div className="rounded-2xl border border-subtle p-4">
+                  <p className="text-sm font-semibold">Overtime</p>
                   <div className="mt-3">
                     {selectedRow.is_overtime ? (
                       <StatusBadge label="Overtime" variant="default" />
                     ) : (
-                      <span className="text-sm text-slate-700">No</span>
+                      <span className="text-sm text-muted">No</span>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 p-4">
-                <p className="text-sm font-semibold text-slate-900">Late Reason</p>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+              <div className="rounded-2xl border border-subtle p-4">
+                <p className="text-sm font-semibold">Late Reason</p>
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 dark:text-slate-200">
                   {selectedRow.late_justification?.trim()
                     ? selectedRow.late_justification
                     : "—"}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 p-4">
-                <p className="text-sm font-semibold text-slate-900">Work Report</p>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+              <div className="rounded-2xl border border-subtle p-4">
+                <p className="text-sm font-semibold">Work Report</p>
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 dark:text-slate-200">
                   {selectedRow.checkout_report?.trim()
                     ? selectedRow.checkout_report
                     : "—"}
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white transition hover:opacity-90"
-              >
+              <button type="button" onClick={handlePrint} className="btn-base btn-primary w-full">
                 Print Report
               </button>
             </div>

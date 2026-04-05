@@ -33,7 +33,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     .select("*", { count: "exact", head: true })
     .eq("role", "staff");
 
-  const { data: attendanceRows } = await supabase
+  const { data: rawAttendanceRows } = await supabase
     .from("attendance")
     .select(`
       id,
@@ -50,7 +50,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     .lte("check_in", toDateTime)
     .order("check_in", { ascending: false });
 
-  const { data: pendingLeaves } = await supabase
+  const attendanceRows = rawAttendanceRows?.map((row: any) => ({
+    ...row,
+    profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles,
+  }));
+
+  const { data: rawPendingLeaves } = await supabase
     .from("leaves")
     .select(`
       id,
@@ -65,7 +70,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
-  const { data: leaveHistory } = await supabase
+  const pendingLeaves = rawPendingLeaves?.map((row: any) => ({
+    ...row,
+    profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles,
+  }));
+
+  const { data: rawLeaveHistory } = await supabase
     .from("leaves")
     .select(`
       id,
@@ -78,6 +88,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       profiles!leaves_user_id_fkey(full_name, email)
     `)
     .order("created_at", { ascending: false });
+
+  const leaveHistory = rawLeaveHistory?.map((row: any) => ({
+    ...row,
+    profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles,
+  }));
 
   const presentCount = attendanceRows?.length || 0;
   const checkedOutCount =
@@ -105,13 +120,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-4 py-8">
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="app-card p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
               Admin Dashboard
             </h1>
-            <p className="mt-1 text-slate-600">
+            <p className="mt-1 text-muted">
               Manage staff, attendance, reports, and leave requests.
             </p>
           </div>
@@ -162,30 +177,31 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       >
         <form className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">From</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              From
+            </label>
             <input
               type="date"
               name="from"
               defaultValue={fromDate}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900"
+              className="w-full rounded-xl px-4 py-3"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">To</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              To
+            </label>
             <input
               type="date"
               name="to"
               defaultValue={toDate}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900"
+              className="w-full rounded-xl px-4 py-3"
             />
           </div>
 
           <div className="flex items-end">
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white transition hover:opacity-90"
-            >
+            <button type="submit" className="btn-base btn-primary w-full">
               Apply Filter
             </button>
           </div>
@@ -211,17 +227,17 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           />
         }
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-subtle">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Email</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Start Date</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">End Date</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Reason</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Applied On</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Action</th>
+              <tr className="text-left">
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Start Date</th>
+                <th className="px-4 py-3">End Date</th>
+                <th className="px-4 py-3">Reason</th>
+                <th className="px-4 py-3">Applied On</th>
+                <th className="px-4 py-3">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -229,17 +245,17 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 pendingLeaves.map((leave: any) => (
                   <tr
                     key={leave.id}
-                    className="border-b border-slate-100 last:border-b-0"
+                    className="border-b border-subtle last:border-b-0"
                   >
-                    <td className="px-4 py-3 font-medium text-slate-900">
+                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                       {leave.profiles?.full_name || "Unknown"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted">
                       {leave.profiles?.email || "-"}
                     </td>
                     <td className="px-4 py-3">{formatDate(leave.start_date)}</td>
                     <td className="px-4 py-3">{formatDate(leave.end_date)}</td>
-                    <td className="px-4 py-3 text-slate-700">{leave.reason}</td>
+                    <td className="px-4 py-3 text-muted">{leave.reason}</td>
                     <td className="px-4 py-3">
                       {formatDateTime(leave.created_at)}
                     </td>
@@ -250,10 +266,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-6 text-center text-slate-500"
-                  >
+                  <td colSpan={7} className="px-4 py-6 text-center text-muted">
                     No pending leave requests.
                   </td>
                 </tr>
@@ -274,17 +287,17 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           />
         }
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-subtle">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Email</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Start Date</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">End Date</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Reason</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Applied On</th>
-                <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
+              <tr className="text-left">
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Start Date</th>
+                <th className="px-4 py-3">End Date</th>
+                <th className="px-4 py-3">Reason</th>
+                <th className="px-4 py-3">Applied On</th>
+                <th className="px-4 py-3">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -292,17 +305,17 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 leaveHistory.map((leave: any) => (
                   <tr
                     key={leave.id}
-                    className="border-b border-slate-100 last:border-b-0"
+                    className="border-b border-subtle last:border-b-0"
                   >
-                    <td className="px-4 py-3 font-medium text-slate-900">
+                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                       {leave.profiles?.full_name || "Unknown"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted">
                       {leave.profiles?.email || "-"}
                     </td>
                     <td className="px-4 py-3">{formatDate(leave.start_date)}</td>
                     <td className="px-4 py-3">{formatDate(leave.end_date)}</td>
-                    <td className="px-4 py-3 text-slate-700">{leave.reason}</td>
+                    <td className="px-4 py-3 text-muted">{leave.reason}</td>
                     <td className="px-4 py-3">
                       {formatDateTime(leave.created_at)}
                     </td>
@@ -319,10 +332,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-6 text-center text-slate-500"
-                  >
+                  <td colSpan={7} className="px-4 py-6 text-center text-muted">
                     No leave history found.
                   </td>
                 </tr>

@@ -63,10 +63,7 @@ export default function ExportAttendanceButton({ rows }: Props) {
   };
 
   return (
-    <button
-      onClick={handleExport}
-      className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-    >
+    <button type="button" onClick={handleExport} className="btn-base btn-primary">
       Export CSV
     </button>
   );
