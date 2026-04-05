@@ -36,10 +36,10 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-7xl items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-2xl border bg-slate-900 p-8 shadow-sm">
         <div className="mb-6 space-y-2 text-center">
           <h1 className="text-3xl font-bold">Sign In</h1>
-          <p className="text-slate-600">Login to access your attendance dashboard</p>
+          <p className="text-white">Login to access your attendance dashboard</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
